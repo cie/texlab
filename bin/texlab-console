@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 
 
-require 'texerb'
 require 'pp'
 
 def get_binding
@@ -27,7 +26,7 @@ else
   b = get_binding
 
   # run erb
-  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+  erb = ERB.new(src.untaint, nil, "%>", "$_erbout")
   $_src = erb.src
   b.eval $_src + expr
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 
-require 'texerb'
+require 'erb'
 
 begin
   # load code
@@ -22,7 +22,7 @@ else
   end
 
   # run erb
-  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+  erb = ERB.new(src.untaint, nil, "%>", "$_erbout")
   erb.run(TOPLEVEL_BINDING.taint)
 
 end

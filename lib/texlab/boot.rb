@@ -5,7 +5,6 @@ require "easystats"
 require "plusminus"
 require "to_latex"
 require "gnuplot"
-require "ruby-debug"
 require "open3"
 
 # tweak Hash
