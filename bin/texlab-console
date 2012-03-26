@@ -1,0 +1,50 @@
+#!/usr/bin/env ruby
+
+
+require 'texerb'
+require 'pp'
+
+def get_binding
+  binding
+end
+
+begin
+  # load code
+  src = $<.read
+  fail unless src
+rescue
+        STDERR.puts File.basename($0) + " [inputfile] [ > outputfile]"
+        STDERR.puts <<EOU
+  Debug texlab inputfile in console. 
+EOU
+else
+
+  # load boot code
+  File.open File.expand_path(__FILE__+"/../../lib/texlab/boot.rb") do |f|
+    src = "<%\n" << f.read << "\n%>\n" << src
+  end
+
+  b = get_binding
+
+  # run erb
+  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+  $_src = erb.src
+  b.eval $_src + expr
+
+
+  def getline
+    print "texlab> "
+    STDIN.gets
+  end
+
+  # run REPL
+  while s = getline do
+    begin
+      pp b.eval(s)
+    rescue 
+      STDERR << $! << $!.backtrace.join("\n") << "\n"
+    end
+  end
+
+end
+

@@ -1,0 +1,11 @@
+\documentclass{article}
+
+
+\begin{document}
+
+Hello <%= 5+5 %>
+
+
+
+
+\end{document}

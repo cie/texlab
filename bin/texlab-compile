@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+
+
+require 'texerb'
+
+begin
+  # load code
+  src = $<.read
+  fail unless src
+
+rescue
+
+        STDERR.puts File.basename($0) + " [inputfile] [ > outputfile]"
+        STDERR.puts <<EOU
+  Compile texlab inputfile to tex. 
+EOU
+else
+
+  # load boot code
+  File.open File.expand_path(__FILE__+"/../../lib/texlab/boot.rb") do |f|
+    src = "<%\n" << f.read << "\n%>\n" << src
+  end
+
+  # run erb
+  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+  erb.run(TOPLEVEL_BINDING.taint)
+
+end
+
