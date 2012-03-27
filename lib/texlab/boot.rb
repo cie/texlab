@@ -81,6 +81,9 @@ def documentFooter
   puts "\\end{document}\n"
 end
 
+def puts string
+  $_erbout << string.latex! << "\n"
+end
 
 # table generation
 #
@@ -89,7 +92,12 @@ def table title, settings={}
   @_table = {}
   yield
   entries = @_table
-  $_latexfile.table(entries, title, settings)
+
+  unless @_tables
+    $_latexfile.table(entries, title, settings)
+  else
+    @_tables << [entries, title, settings]
+  end
 end
 
 def column title
@@ -111,13 +119,49 @@ def row title
   @_table[title] = @_table_columns.first
 end
 
+def tables *args
+  opts = args.extract_options!
+  caption = args.shift
 
+  @_tables = []
+  yield
 
+  $_latexfile.tables(@_tables, caption, opts)
 
-def puts string
-  $_erbout << string.latex! << "\n"
+  @_tables = nil
 end
 
+
+# Figure generation
+#
+
+def figure *args
+  opts = args.extract_options!
+  caption = args.shift
+  format = opts[:width] ? "width=#{opts[:width]}" : opts[:format]
+  label = opts[:label]
+  filename = opts[:filename]
+  if @_figures
+    @_figures << Figure.new(format, filename, caption, label)
+  else
+    raise "not implemented"
+  end
+end
+
+def figures *args
+  opts = args.extract_options!
+  placement = opts.delete(:placement) || "htbp"
+  label = opts.delete(:label)
+  newPageThreshold = opts.delete(:newPageThreshold) || 29
+  caption = args.shift
+
+  @_figures = []
+  yield
+
+  $_latexfile.figures(caption, @_figures, newPageThreshold, placement, label)
+
+  @_figures = nil
+end
 
 
 # plotting
@@ -283,13 +327,10 @@ end
 
 $_macros={}
 
-# a macro is available in tex (\asdf) and in ruby (:asdf). It will go to math
+# a macro is available in tex (\asdf) and in ruby (:asdf.to_latex or $asdf). It will go to math
 # mode
 def macro hash
-  hash.each do |key, value|
-    $_macros[key] = "\\ensuremath{#{value}}"
-    puts "\\newcommand{\\#{key}}{\\ensuremath{#{value}}}"
-  end
+  text_macro hash.mash{|key, value| [key, value.latex!.to_latex_math] }
 end
 
 # a text macro is available in tex (\asdf) and in ruby (:asdf). It will not be
@@ -297,6 +338,7 @@ end
 def text_macro hash
   hash.each do |key, value|
     $_macros[key] = value
+    eval "$#{key} = '#{value.gsub("\\","\\\\").gsub("'", "\\'")}'"
     puts "\\newcommand{\\#{key}}{#{value}}"
   end
 end
@@ -308,7 +350,7 @@ class Symbol
   end
 
   def + str
-    "\\ensuremath{#{to_latex}#{str}}".latex!
+    "#{to_latex}#{str}".latex!.to_latex_math
   end
 end
 

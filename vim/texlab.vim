@@ -122,7 +122,7 @@ set guioptions-=t
 set foldcolumn=1 foldmethod=syntax foldlevel=10000
 
 " load plugins
-source <sfile>:p:h/plugin/**/*.vim
+"source <sfile>:p:h/plugin/**/*.vim
 
 " cd next to file
 if expand("%") != ""

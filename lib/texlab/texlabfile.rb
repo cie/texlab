@@ -31,6 +31,7 @@ class TexlabFile < LatexFile
       :units=>true,
       :float=>true,
       :xcolor=>"table"
+      #:subfig=>["lofdepth", "lotdepth"]
     }
       
     @default_table_align = 'c'
@@ -75,9 +76,8 @@ class TexlabFile < LatexFile
     @usePackages.each do |package, settings|
       case settings
       when true then puts "\\usepackage{#{package}}"
-      when String then puts "\\usepackage[#{settings}]{#{package}}"
       when Array  then puts "\\usepackage[#{settings.join(",")}]{#{package}}"
-      else
+      else puts "\\usepackage[#{settings}]{#{package}}"
       end
     end
     puts "\\addtolength{\\oddsidemargin}{-3.5cm}"
@@ -114,6 +114,39 @@ class TexlabFile < LatexFile
     entries = convertKeysToLatex(entries)
 
     super(entries, caption, args)
+  end
+
+  def plain_table entries, caption, opts={}
+    # capture output of table()
+    temp_erbout = @_erbout; @_erbout = ""
+    table(entries, caption, opts)
+    src = @_erbout; @_erbout = temp_erbout
+
+    src.sub!(/\A.*?\\begin{center}(.*)\\end{center}.*\z/m, '\1') or raise "internal error"
+    src.sub!(/\\caption{#{caption}}/, "") or raise "internal error"
+
+  end
+
+  def tables data, caption, opts={}
+    placement        = opts.delete(:placement) || "htbp"
+    tableLandscape   = opts.delete(:landscape)
+    tableFontSize    = opts.delete(:fontSize)  || @defaultTableFontSize
+    tableLabel       = opts.delete(:label)     || ""
+    tableCaption     = caption
+
+    puts "\\begin{landscape}" if tableLandscape
+    puts "\n\\begin{table}[#{placement}]\n\\begin{center}"
+    puts "\\#{tableFontSize}" if tableFontSize
+    
+    puts data.map { |args|
+      entries, caption, opts = *args
+      "\\subtable[#{caption}]{#{plain_table(*args)}}"
+    }.join("\\qquad")
+
+    puts "\\caption{#{tableCaption}}\n" if tableCaption
+    puts "\\label{tab:#{tableLabel}}" if tableLabel
+    puts "\\end{center}\n\\end{table}\n"
+    puts "\\end{landscape}" if @tableLandscape
   end
 
   private
