@@ -1,3 +1,7 @@
+# vim binary
+bin/texlab
+
+
 # rcov generated
 coverage
 coverage.data

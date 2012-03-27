@@ -7,6 +7,17 @@ require "to_latex"
 require "gnuplot"
 require "open3"
 
+# tweak Array
+class Array
+  def extract_options!
+    if last.is_a? Hash
+      pop
+    else
+      {}
+    end
+  end
+end
+
 # tweak Hash
 class Hash
   # Object-like behavior
@@ -120,7 +131,10 @@ def Gnuplot.open( persist=true )
   IO::popen( cmd, "w+") { |io| yield io }
 end 
 
-def plot title, opts={}
+def plot *args
+  opts = args.extract_options!
+  title = args[0]
+
   placement = opts.delete(:placement) || "htbp"
   width   = opts.delete(:width) || "17cm"
   height = opts.delete(:height) || "10cm"
@@ -132,7 +146,8 @@ def plot title, opts={}
       yield
       @_datasets
 
-      Gnuplot.open do |gp|
+      gnuplot = Gnuplot.gnuplot(true) or raise "gnuplot not found"
+      Open3.popen3(gnuplot) do |gp, out, err, external|
         gp <<<<-GP
           set terminal latex size #{width}, #{height}
         GP
@@ -151,31 +166,34 @@ def plot title, opts={}
             plot.data << ds
           end
         end
-        gp.close_write
-        puts gp.readlines.join("\n")
+        gp.close
+        puts out.readlines.join("\n")
+
+        if not external.value.success?
+          errlines = err.readlines
+          raise "could not plot:\n" + errlines.join("\n")
+        end
       end
     end
-    puts "\\caption{#{title}}"
+    puts "\\caption{#{title}}" if title
   end
 end
 
-def splot title, opts={}, &block
+def splot *args, &block
+  opts = args.extract_options!
   opts.cmd = "splot"
-  plot title, opts, &block
+  plot *args, opts, &block
 end
 
 def dataset *args
-  if args.last.is_a? Hash
-    opts = args.pop
-  else 
-    opts = {}
-  end
+  opts = args.extract_options!
 
-  case args.first
-  when String
+  data = args.shift
+  data_is_expr = !!data
+  if data
     # simple function
-    ds = Gnuplot::DataSet.new args.shift
-  when nil
+    ds = Gnuplot::DataSet.new data
+  else
     # data
     @_datastrings = []
     yield
@@ -186,14 +204,13 @@ def dataset *args
     end
 
     ds = Gnuplot::DataSet.new data
-  else
-    raise ArgumentError, "Unnecessary parameters: #{args}"
   end
   
   # check args
   raise ArgumentError, "Unnecessary parameters: #{args}" unless args.empty?
 
   # tweak args (syntax candy)
+  opts[:title] = nil unless data_is_expr or opts.has_key? :title
   if opts.key? :title and not opts[:title]
     opts.delete(:title)
     opts[:notitle] = true
@@ -234,11 +251,11 @@ def fit expr, opts={}
 
   ds = @_datasets.first
 
-  cmd = Gnuplot.gnuplot(true) or raise "gnuplot not found"
   errlines = []
   result = {}
 
-  Open3.popen3(cmd) do |gp, out, err, external|
+  gnuplot = Gnuplot.gnuplot(true) or raise "gnuplot not found"
+  Open3.popen3(gnuplot) do |gp, out, err, external|
     vars.each do |var|
       gp << "#{var} = #{rand}\n"
     end
