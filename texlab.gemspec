@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.date = "2012-04-01"
   s.description = "texlab a toolkit based on erb that for creating documents and doing calculations at the same time. It is capable to output the proper number of significant digits, generate tables and plots using gnuplot. It has a simple DSL."
   s.email = "kallo.bernat@gmail.com"
-  s.executables = ["bin/texlab-compile"]
+  s.executables = ["texlab-compile"]
   s.extra_rdoc_files = [
     "LICENSE.txt",
     "README.rdoc",
@@ -32,18 +32,14 @@ Gem::Specification.new do |s|
     "bin/texlab-compile.tex",
     "bin/texlab-console",
     "doc/readme.texlab",
-    "fit.log",
     "lib/texlab.rake",
     "lib/texlab.rb",
     "lib/texlab/boot.rb",
     "lib/texlab/texlabfile.rb",
-    "readme.aux",
-    "readme.log",
-    "readme.out",
-    "readme.pdf",
     "spec/spec_helper.rb",
     "spec/texlab_spec.rb",
     "texlab",
+    "texlab.gemspec",
     "vim/texlab.vim"
   ]
   s.homepage = "http://github.com/cie/texlab"
