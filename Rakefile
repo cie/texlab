@@ -21,7 +21,7 @@ Jeweler::Tasks.new do |gem|
   gem.description = %Q{texlab a toolkit based on erb that for creating documents and doing calculations at the same time. It is capable to output the proper number of significant digits, generate tables and plots using gnuplot. It has a simple DSL.}
   gem.email = "kallo.bernat@gmail.com"
   gem.authors = ["Bernát Kalló"]
-  gem.executables = ["bin/texlab-compile"]
+  gem.executables = ["texlab-compile"]
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
