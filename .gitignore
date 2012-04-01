@@ -1,7 +1,5 @@
-# vim binary
 bin/texlab
-
-
+#
 # rcov generated
 coverage
 coverage.data
@@ -44,8 +42,7 @@ pkg
 #.\#*
 
 # For vim:
-*.swp
-*.swo
+#*.swp
 
 # For redcar:
 #.redcar
