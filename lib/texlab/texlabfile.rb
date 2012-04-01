@@ -1,3 +1,4 @@
+# encoding: ASCII-8bit
 require "latex"
 
 class TexlabFile < LatexFile

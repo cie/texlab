@@ -1,11 +1,284 @@
-\documentclass{article}
-
-
+<%
+  documentHeader :usePackages => { 
+    :babel => "magyar", :inputenc=>"utf8" }
+%>
 \begin{document}
 
-Hello <%= 5+5 %>
+
+Helló!
+
+Ez a TEXLAB program rövid leírása.
+
+TEXLAB fájlból először tex fájlt kell csinálni a texlab-compile paranccsal, aztán lehet futtatni pdflatex-szel így:
+
+ruby "......./texlab-compile.rb" "..../a-te-fájlod.texlab" 
+
+pdflatex "....../a-te-fájlod.tex"
+
+
+Ez, amit olvasol, egy TEXLAB fájl. A TEXLAB fájlban Ruby és LaTeX kódok váltogatják egymást. LaTeX kóddal kezdődik, és Ruby módba a kisebb-százalék jelekkel lehet átmenni, illetve a százalék-nagyobb jelekkel visszamenni.
+
+A százalékjelek között lehet ruby parancsokat adni. Az egyik ilyen parancs a documentHeader, amit a fájl elején látsz. Ez elkészíti a LaTeX fájl elejére írandó sorokat A paraméterei:
+
+usePackages: milyen csomagokat használjunk. A babel csomag a nyelvi speciális dolgokat csinálja. Az inputenc-nek kell megadni, hogy milyen formátumú a fájl. Ezeken kívül is jónéhány csomagot alapból betölt.
+
+twocolumn: ha true, akkor kéthasábos lesz a dokumentum
+
+fontsize: "12pt", "11pt" vagy "10pt" (default). a fontméret.
+
+landscape: true esetén a dokumentum fekvő lapon lesz.
 
 
 
+
+
+
+
+
+A másik parancs a puts, ami kiír egy kifejezést:
+
+<% puts "Helló" %>
+
+A sor elején lévő százalékjel is átvisz ruby módba.
+
+% puts ":)"
+
+Ha LaTeX megjegyzést szeretnél írni, akkor sajnos dupla százalékjelet kell írni:
+
+%% Ez egy latex megjegyzés, senki se fogja látni.
+
+A harmadik lehetőség, hogy ha egy Ruby kifejezés értékét szeretnéd betenni a fájlba, akkor a kisebb-százalék-egyenlő jellel kell nyitni:
+
+<%= "Helló" %>
+
+Ez lényegében ugyanolyan, mint a puts.
+
+
+A Rubyban lehet matematikai kifejezéseket írni. Pl. öt meg öt az <%= 5+5 %>. A hatványozás **, a tizedestörtekben pont van.
+
+Tudsz definiálni változókat:
+<% alma = 29*2 %>
+
+Most <%=alma%> darab almánk van.
+
+A konstansok nagybetűvel kezdődnek. Két konstansunk is van, <%= E %> és <%=PI%>. Te is definiálhatsz konstast:
+<% R=8.314 %>
+
+A számokra meg lehet adni a pm (pluszminusz) metódussal hibahatárt: <%= 12.5.pm(0.00005).to_latex%>. Ilyenkor kézzel kell konvertálni Latex képletté a to\_latex metódussal, különben az eredeti szám jelenik meg. Ha puts-t használsz, akkor nem kell, mert automatikusan megcsinálja.
+<% puts 13.5.pm(0.000005) %>
+
+Relatíve is meg lehet adni a hibát <%= 0.5.pm_rel(0.01).to_latex %>
+
+Szép exponenciális alakokat tud csinálni: <%= 0.00000000012.pm_rel(0.01).to_latex%>.
+
+
+
+
+Vannak függvényeink. 90 fok az <%=radians(90)%> radián, ennek a szinusza <%=sin(radians(90))%>. Ha egyértelmű, hogy mit akarsz, akkor nem muszáj kiírni a zárójeleket, hanem írhatod pl., hogy <%=sin radians 90%>. De ha erre nagyon rászoksz, még sok gondot fog okozni :).
+
+Te is definiálhatsz füvvgényeket:
+<% 
+  def cosh(x)
+    (E**x + E**(-x))/2
+  end
+%>
+cosh 4 = <%=cosh(4)%>
+De ez a függvény már amúgy is létezik.
+
+Az adatokat néha érdemes listában tárolni:
+<%
+  adatok = [1,2,3]
+%>
+<%=adatok%>
+
+Ezeken végig lehet menni kétféleképpen is:
+
+<%
+  for a in adatok
+    puts a
+    puts " alma "
+  end
+%>
+
+vagy
+
+<%
+  adatok.each do |a|
+    puts a
+    puts " alma "
+  end
+%>.
+
+Az adatokat néha érdemes hash-ben tárolni:
+
+<%
+  test = {
+    m: 9.1,
+    V: 8.1
+  }
+%>
+A test tömege <%=test.m%>, térfogata <%=test.V%>, sűrűsége <%=test.m/test.V%>.
+
+A program tud számolni hibaterjedést, úgyhogy érdemes megadni minden adatban a hibahatárt, hogy az eredmény szebb legyen:
+
+<%
+  test = {
+    m: 9.1.pm(0.05),
+    V: 8.10.pm(0.02)
+  }
+%>
+A test tömege <%=test.m.to_latex%>, térfogata <%=test.V.to_latex%>, sűrűsége <%=(test.m/test.V).to_latex%>.
+
+
+Táblázatokat lehet csinálni.
+<%
+  table("cím") do
+    row("sorcím") do
+      column("oszlopcím") do
+        "érték"
+      end
+    end
+  end
+%>
+
+Lehet több oszlopot és sort is. A do..end helyett lehet kapcsos zárójelet használni
+<%
+  table("állatok") do
+    row("okos") do
+      column("nagy") { "kutya" }
+      column("kicsi") { "macska" }
+    end
+    row("buta") do
+      column("nagy"){ "bálna" }
+      column("kicsi"){ "egér" }
+    end
+  end
+%>
+
+Lehet több szintű oszlopokat is, de többszintű sorokat (még) nem.
+<%
+  table("adatok") do
+    row("test1") do
+      column("tömeg") do
+        column("előtte"){ 90.0.pm(1) }
+        column("utána"){ 0.00075.pm_rel(0.05) }
+      end
+    end
+  end
+%>
+
+Figyeld meg, hogy a .to\_latex automatikusan megtörténik, tehát itt sem kell kiírni, akárcsak a puts-nál.  Azt is figyeld meg, hogy mindig table, row, column a sorrend az egymásba ágyazásnál.
+
+Érdemes az adatokat ciklusból táblázatba konvertálni:
+<%
+  table("számolás") do
+    adatok.each do |a|
+      row(a) do
+        column("kétszerese") { a*2 }
+      end
+    end
+  end
+%>
+
+A rowTitle opcióval lehet megadni, hogy mi legyen a sarokban. Így lehet csinálni szorzótáblát:
+<%
+  table("Szorzótábla", rowTitle: "x") do
+    (1..10).each do |i|
+      row(i) do
+        (1..10).each do |j|
+          column(j) { i*j }
+        end
+      end
+    end
+  end
+%>
+
+A lehetséges beállítások: \\
+placement: "H" - legyen a táblázat pont itt, és ne külön lapon. \\
+rowTitle: a sarokban mi legyen \\
+a többit lásd http://rubydoc.info/gems/latex/LatexFile:table
+
+Összetett táblázatok:
+<%
+  tables("Táblák") do
+    table("Első") do
+      row("h") do
+        column("valami") {"k"}
+      end
+    end
+    table("Második") do
+      row("x") do
+        column("semmi") {"o"}
+      end
+    end
+  end
+%>
+
+Grafikonok:
+
+<%
+  plot "$x^2$ függvény" do
+    dataset "x**2"
+  end
+%>
+
+Adatpontok:
+<%
+  plot "adatok", xlabel: "$x$", ylabel: "$x^2$"  do
+    dataset do
+      data(0, 0**2)
+      data(1, 1**2)
+      data(2, 2**2)
+      data(3, 3**2)
+      data(4, 4**2)
+      data(5, 5**2)
+    end
+  end
+%>
+
+Illesztés:
+<%
+  a,b = fit "a*x+b", via: "a,b" do
+    dataset do
+      data(0, 0**2)
+      data(1, 1**2)
+      data(2, 2**2)
+      data(3, 3**2)
+      data(4, 4**2)
+      data(5, 5**2)
+    end
+  end
+%>
+$<%=a.to_latex%>x+<%=b.to_latex%>$
+
+Illesztett egyenes a grafikonon:
+<%
+  plot "adatok", xlabel: "$x$", ylabel: "$x^2$"  do
+    dataset do
+      data(0, 0**2)
+      data(1, 1**2)
+      data(2, 2**2)
+      data(3, 3**2)
+      data(4, 4**2)
+      data(5, 5**2)
+    end
+    dataset "#{a}*x+#{b}", title: "illesztett egyenes"
+  end
+%>
+
+Változók használata szövegben: <%= "Helló, #{a}!" %>
+
+
+Makrók:
+
+<%
+  macro kij: "k_{ij}"
+%>
+
+Használata: Latexben: \kij a négyzeten vagy $\kij^2$, rubyban: <%= $kij %> a négyzeten vagy <%= :kij.to_latex %> a négyzeten vagy <%= :kij + "^2" %> vagy <%= "$ #{$kij} ^ 2 $" %> vagy ennek a rövidítése: <%= "$ #$kij ^ 2 $" %>. Szóval mindenféle krix-kraxszal elő lehet hozni.
+
+Az egész csak akkor működik rendesen, ha a makró nevében CSAK BETŰK vannak.
+
+Figyeld meg, hogy a makró automatikusan átmegy math módba, úgyhogy mindegy hogy dollárjelek közé teszed vagy nem. A :kij + valami egy bónusz egyszerűsítés, ez is magától átmegy math módba.
 
 \end{document}

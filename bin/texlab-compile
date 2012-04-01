@@ -1,19 +1,35 @@
 #!/usr/bin/env ruby
+# encoding: ASCII-8bit
+
+
 
 
 require 'erb'
+require 'to_latex'
+
+$: << File.expand_path(__FILE__+"/../../lib")
+
+class TEXERB < ERB
+end
 
 begin
   # load code
-  src = $<.read
-  fail unless src
+  #
+  infile = ARGV[0] || fail
+  outfile = ARGV[1] || infile.sub(/(\.texlab)?$/, ".tex")
+
+  src = nil
+  File.open infile do |f|
+    src = f.read
+  end
+  fail if !src
 
 rescue
-
-        STDERR.puts File.basename($0) + " [inputfile] [ > outputfile]"
+        STDERR.puts File.basename($0) + " <inputfile> <outputfile>"
         STDERR.puts <<EOU
   Compile texlab inputfile to tex. 
 EOU
+
 else
 
   # load boot code
@@ -22,8 +38,11 @@ else
   end
 
   # run erb
-  erb = ERB.new(src.untaint, nil, "%>", "$_erbout")
-  erb.run(TOPLEVEL_BINDING.taint)
+  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+
+  File.open outfile, "w" do |f|
+    f.print erb.result(TOPLEVEL_BINDING.taint)
+  end
 
 end
 

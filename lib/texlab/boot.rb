@@ -1,6 +1,5 @@
 # This is the boot file to be loaded before parsing a .texlab file
-#
-$: << (ENV["TEXLAB"] + "/lib")
+# encoding: ASCII-8bit
 require "easystats"
 require "plusminus"
 require "to_latex"
@@ -77,12 +76,8 @@ def env *args
   $_latexfile.env(*args){yield}
 end
 
-def documentFooter
-  puts "\\end{document}\n"
-end
-
 def puts string
-  $_erbout << string.latex! << "\n"
+  $_erbout << string.to_latex << "\n"
 end
 
 # table generation
@@ -202,7 +197,7 @@ def plot *args
             when true
               plot.send key
             else
-              plot.send key, value
+              plot.send key, value.gsub(/([\\ ])/, "\\\\\\1")
             end
           end
 
@@ -211,7 +206,7 @@ def plot *args
           end
         end
         gp.close
-        puts out.readlines.join("\n")
+        $_erbout << out.readlines.join("\n")
 
         if not external.value.success?
           errlines = err.readlines
@@ -219,7 +214,7 @@ def plot *args
         end
       end
     end
-    puts "\\caption{#{title}}" if title
+    $_erbout << "\\caption{#{title}}" if title
   end
 end
 
@@ -276,6 +271,10 @@ end
 
 def datastring arg
   @_datastrings << arg
+end
+
+def data *args
+  datastring args
 end
 
 
@@ -339,7 +338,7 @@ def text_macro hash
   hash.each do |key, value|
     $_macros[key] = value
     eval "$#{key} = '#{value.gsub("\\","\\\\").gsub("'", "\\'")}'"
-    puts "\\newcommand{\\#{key}}{#{value}}"
+    $_erbout << "\\def\\#{key}{#{value}}"
   end
 end
 
@@ -363,3 +362,12 @@ end
 
 # include Math
 include Math
+
+# degree radian
+def degrees x
+  x * 180.0 / Math::PI
+end
+
+def radians x
+  x / 180.0 * Math::PI
+end
