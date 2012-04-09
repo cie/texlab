@@ -106,7 +106,9 @@ class TexlabFile < LatexFile
     # override defaults
     args = {
       :sort=> proc{0},
-      :header_hlines=>true
+      :header_hlines=>true,
+      :placement => (args[:label] ? 'htbp' : 'H'),
+      :empty => "---"
     }.merge(args)
 
 

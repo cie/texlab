@@ -174,10 +174,11 @@ def plot *args
   opts = args.extract_options!
   title = args[0]
 
-  placement = opts.delete(:placement) || "htbp"
+  placement = opts.delete(:placement) || (opts[:label] ? "htbp" : "H")
   width   = opts.delete(:width) || "17cm"
   height = opts.delete(:height) || "10cm"
   cmd    = opts.delete(:cmd) || "plot"
+  label = opts.delete(:label)
 
   env :figure, "[#{placement}]" do
     env :center do
@@ -215,6 +216,7 @@ def plot *args
       end
     end
     $_erbout << "\\caption{#{title}}" if title
+    $_erbout << "\\label{#{label}}" if label
   end
 end
 
@@ -332,14 +334,26 @@ def macro hash
   text_macro hash.mash{|key, value| [key, value.latex!.to_latex_math] }
 end
 
-# a text macro is available in tex (\asdf) and in ruby (:asdf). It will not be
+# a text macro is available in tex (\asdf) and in ruby (:asdf, $asdf). It will not be
 # forced to math mode 
 def text_macro hash
   hash.each do |key, value|
-    $_macros[key] = value
-    eval "$#{key} = '#{value.gsub("\\","\\\\").gsub("'", "\\'")}'"
-    $_erbout << "\\def\\#{key}{#{value}}"
+    define_latex_macro key, value
+    define_symbol_macro key, value
+    define_global_macro key, value
   end
+end
+
+def define_symbol_macro key, value
+  $_macros[key] = value
+end
+
+def define_latex_macro key, value
+  $_erbout << "\\def\\#{key}{#{value}}"
+end
+
+def define_global_macro key, value
+  eval "$#{key} = '#{value.gsub("\\","\\\\").gsub("'", "\\'")}'"
 end
 
 class Symbol
@@ -351,7 +365,50 @@ class Symbol
   def + str
     "#{to_latex}#{str}".latex!.to_latex_math
   end
+
+  def * unit
+    "\\unit[\\text{#{to_latex}}]{#{unit}}".latex!.to_latex_math
+  end
 end
+
+
+
+
+%w(
+  alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho sigma tau upsilon phi chi psi omega
+).each do |a|
+  [a, a.capitalize].each do |b|
+    key = b.to_sym
+    value = "\\#{b}".latex!.to_latex_math
+    define_symbol_macro key, value
+    define_global_macro key, value
+  end
+end
+
+('a'..'z').each do |a|
+  [a, a.capitalize].each do |b|
+    key = b.to_sym
+    value = "#{b}".latex!.to_latex_math
+    define_symbol_macro key, value
+    define_global_macro key, value
+  end
+end
+
+
+# units
+$_units = {}
+
+def unit hash
+  $_units.update hash
+end
+
+class Symbol
+  def with_unit
+    raise "No unit defined for #{self}" unless $_units[self]
+    self * "(#{$_units[self])}"
+  end
+end
+
 
 
 # debug
@@ -370,4 +427,11 @@ end
 
 def radians x
   x / 180.0 * Math::PI
+end
+
+
+# tikz
+def tikz *libs
+  $_erbout << "\\usepackage{tikz}\n"
+  $_erbout << "\\usetikzlibrary{#{libs.join(",")}}\n" if libs.any?
 end

@@ -38,7 +38,7 @@ else
   end
 
   # run erb
-  erb = TEXERB.new(src.untaint, nil, "%>", "$_erbout")
+  erb = TEXERB.new(src.untaint, nil, ">", "$_erbout")
 
   File.open outfile, "w" do |f|
     f.print erb.result(TOPLEVEL_BINDING.taint)
