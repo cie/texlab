@@ -405,7 +405,7 @@ end
 class Symbol
   def with_unit
     raise "No unit defined for #{self}" unless $_units[self]
-    self * "(#{$_units[self])}"
+    self * "(#{$_units[self]})"
   end
 end
 
