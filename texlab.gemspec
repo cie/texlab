@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "texlab"
-  s.version = "0.0.0"
+  s.version = "0.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Bern\u{e1}t Kall\u{f3}"]
-  s.date = "2012-04-01"
+  s.date = "2012-04-09"
   s.description = "texlab a toolkit based on erb that for creating documents and doing calculations at the same time. It is capable to output the proper number of significant digits, generate tables and plots using gnuplot. It has a simple DSL."
   s.email = "kallo.bernat@gmail.com"
   s.executables = ["texlab-compile"]
@@ -32,7 +32,6 @@ Gem::Specification.new do |s|
     "bin/texlab-compile.tex",
     "bin/texlab-console",
     "doc/readme.texlab",
-    "lib/texlab.rake",
     "lib/texlab.rb",
     "lib/texlab/boot.rb",
     "lib/texlab/texlabfile.rb",
