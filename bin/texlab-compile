@@ -18,11 +18,11 @@ begin
   infile = ARGV[0] || fail
   outfile = ARGV[1] || infile.sub(/(\.texlab)?$/, ".tex")
 
-  src = nil
+  content = nil
   File.open infile do |f|
-    src = f.read
+    content = f.read
   end
-  fail if !src
+  fail if !content
 
 rescue
         STDERR.puts File.basename($0) + " <inputfile> <outputfile>"
@@ -32,13 +32,25 @@ EOU
 
 else
 
-  # load boot code
-  File.open File.expand_path(__FILE__+"/../../lib/texlab/boot.rb") do |f|
-    src = "<%\n" << f.read << "\n%>\n" << src
+  src = "<% $_binding=binding %>"
+
+  # load modules
+
+  %w(hash latex debug figure macro math plot stats table tikz).each do |f|
+    f = File.expand_path(__FILE__+"/../../lib/texlab/#{f}.rb")
+    File.open f do |file|
+      s = file.read
+      s.gsub!(/([\\#"])/,"\\\\\\1"); s.gsub!(/\n/, "\\\\n")
+      f.gsub!(/([\\#"])/,"\\\\\\1"); f.gsub!(/\n/, "\\\\n")
+      src << "<% eval(\"#{s}\",binding,\"#{f}\") %>" 
+    end
   end
+
+  src << content
 
   # run erb
   erb = TEXERB.new(src.untaint, nil, ">", "$_erbout")
+  erb.filename = infile
 
   File.open outfile, "w" do |f|
     f.print erb.result(TOPLEVEL_BINDING.taint)

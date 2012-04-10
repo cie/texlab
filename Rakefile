@@ -22,6 +22,7 @@ Jeweler::Tasks.new do |gem|
   gem.email = "kallo.bernat@gmail.com"
   gem.authors = ["Bernát Kalló"]
   gem.executables = ["texlab-compile"]
+  gem.files = FileList["lib/**/*.rb", "bin/*", "[A-Z]*", "spec/**/*"].to_a
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
