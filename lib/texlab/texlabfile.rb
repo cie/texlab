@@ -13,7 +13,7 @@ class TexlabFile < LatexFile
 
     @extras = {
       :documentclass => :article,
-      :fontsize => "10pt"
+      :fontsize => "12pt"
     }
 
     #use defaults for unused entries:
@@ -31,7 +31,8 @@ class TexlabFile < LatexFile
       :amsmath=>true,
       :units=>true,
       :float=>true,
-      :xcolor=>"table"
+      :xcolor=>"table",
+      :rmpage=>[:wider,:taller]
       #:subfig=>["lofdepth", "lotdepth"]
     }
       
@@ -81,10 +82,10 @@ class TexlabFile < LatexFile
       else puts "\\usepackage[#{settings}]{#{package}}"
       end
     end
-    puts "\\addtolength{\\oddsidemargin}{-3.5cm}"
-    puts "\\addtolength{\\textwidth}{7cm}"
-    puts "\\addtolength{\\topmargin}{-3cm}"
-    puts "\\addtolength{\\textheight}{5cm}"
+    #puts "\\addtolength{\\oddsidemargin}{-3.5cm}"
+    #puts "\\addtolength{\\textwidth}{7cm}"
+    #puts "\\addtolength{\\topmargin}{-3cm}"
+    #puts "\\addtolength{\\textheight}{5cm}"
     puts "\\newcommand{\\hide}[1]{}"
 
     puts "\\special{landscape}" if @extras[:landscape]
